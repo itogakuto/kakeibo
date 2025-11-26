@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title><%= searchMode ? `検索結果「${keyword}」` : 'My Blog' %></title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header class="container">
+    <h1>My Blog</h1>
+    <form class="search" action="/search" method="POST">
+      <label>キーワード検索:</label>
+      <input type="text" name="q" value="<%= keyword %>" />
+      <button type="submit">検索</button>
+    </form>
+  </header>
+
+  <main class="container">
+    <% if (errors && errors.length) { %>
+      <div class="alert">
+        <ul>
+          <% errors.forEach(e => { %><li><%= e %></li><% }) %>
+        </ul>
+      </div>
+    <% } %>
+
+    <% if (!searchMode) { %>
+      <section class="card">
+        <h2>新しいブログを追加</h2>
+        <form action="/create" method="POST" class="stack">
+          <label>タイトル:
+            <input type="text" name="title" value="<%= form.title %>" />
+          </label>
+          <label>投稿日:
+            <input type="date" name="postedAt" value="<%= form.postedAt %>" />
+          </label>
+          <label>内容:
+            <textarea name="content" rows="5"><%= form.content %></textarea>
+          </label>
+          <button type="submit">追加</button>
+        </form>
+      </section>
+    <% } else { %>
+      <h2>キーワード検索結果「<%= keyword %>」</h2>
+    <% } %>
+
+    <% posts.forEach(p => { %>
+      <article class="card">
+        <h3><%= p.title %></h3>
+        <p>投稿日: <%= p.dateStr %></p>
+        <p><%= p.content %></p>
+        <div class="actions">
+          <a class="btn" href="/update/<%= p.id %>">編集</a>
+          <a class="btn danger" href="/delete/<%= p.id %>">削除</a>
+        </div>
+      </article>
+    <% }) %>
+
+    <% if (searchMode) { %>
+      <p><a class="btn" href="/">戻る</a></p>
+    <% } %>
+  </main>
+</body>
+</html>

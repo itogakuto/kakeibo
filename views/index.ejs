@@ -2,63 +2,240 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title><%= searchMode ? `検索結果「${keyword}」` : 'My Blog' %></title>
+  <title>家計簿アプリ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <header class="container">
-    <h1>My Blog</h1>
-    <form class="search" action="/search" method="POST">
-      <label>キーワード検索:</label>
-      <input type="text" name="q" value="<%= keyword %>" />
-      <button type="submit">検索</button>
-    </form>
+  <header class="app-header">
+    <div class="container header-inner">
+      <h1>家計簿アプリ</h1>
+      <!-- 必要なら右上にログアウトボタンなど -->
+      <!-- <form action="/logout" method="post"><button class="btn subtle">ログアウト</button></form> -->
+    </div>
   </header>
 
-  <main class="container">
-    <% if (errors && errors.length) { %>
-      <div class="alert">
-        <ul>
-          <% errors.forEach(e => { %><li><%= e %></li><% }) %>
-        </ul>
+  <main class="container main-layout">
+    <!-- サマリー -->
+    <section class="summary">
+      <div class="card summary-card">
+        <h2>総収入</h2>
+        <p class="summary-value">
+          <%= ((summary && summary.totalIncome) || 0).toLocaleString() %><span>円</span>
+        </p>
       </div>
-    <% } %>
+      <div class="card summary-card">
+        <h2>総支出</h2>
+        <p class="summary-value">
+          <%= ((summary && summary.totalExpense) || 0).toLocaleString() %><span>円</span>
+        </p>
+      </div>
+      <div class="card summary-card">
+        <h2>残高</h2>
+        <p class="summary-value">
+          <%= ((summary && summary.balance) || 0).toLocaleString() %><span>円</span>
+        </p>
+      </div>
+    </section>
 
-    <% if (!searchMode) { %>
-      <section class="card">
-        <h2>新しいブログを追加</h2>
-        <form action="/create" method="POST" class="stack">
-          <label>タイトル:
-            <input type="text" name="title" value="<%= form.title %>" />
-          </label>
-          <label>投稿日:
-            <input type="date" name="postedAt" value="<%= form.postedAt %>" />
-          </label>
-          <label>内容:
-            <textarea name="content" rows="5"><%= form.content %></textarea>
-          </label>
-          <button type="submit">追加</button>
-        </form>
-      </section>
-    <% } else { %>
-      <h2>キーワード検索結果「<%= keyword %>」</h2>
-    <% } %>
+    <!-- フィルタ -->
+    <section class="card filters">
+      <h2>フィルタ</h2>
+      <form action="/" method="GET" class="filters-form">
+        <div class="filters-row">
+          <div class="field">
+            <span class="field-label">収支区分</span>
+            <select name="kind">
+              <option value="all"    <%= (!filter || filter.kind === 'all') ? 'selected' : '' %>>すべて</option>
+              <option value="income" <%= (filter && filter.kind === 'income') ? 'selected' : '' %>>収入のみ</option>
+              <option value="expense"<%= (filter && filter.kind === 'expense') ? 'selected' : '' %>>支出のみ</option>
+            </select>
+          </div>
 
-    <% posts.forEach(p => { %>
-      <article class="card">
-        <h3><%= p.title %></h3>
-        <p>投稿日: <%= p.dateStr %></p>
-        <p><%= p.content %></p>
-        <div class="actions">
-          <a class="btn" href="/update/<%= p.id %>">編集</a>
-          <a class="btn danger" href="/delete/<%= p.id %>">削除</a>
+          <div class="field">
+            <span class="field-label">期間</span>
+            <div class="date-range">
+              <input type="date" name="startDate" value="<%= filter && filter.startDate ? filter.startDate : '' %>" />
+              <span class="date-range-separator">〜</span>
+              <input type="date" name="endDate" value="<%= filter && filter.endDate ? filter.endDate : '' %>" />
+            </div>
+          </div>
+
+          <div class="field filters-submit">
+            <button type="submit" class="btn primary">絞り込み</button>
+          </div>
         </div>
-      </article>
-    <% }) %>
+      </form>
+    </section>
 
-    <% if (searchMode) { %>
-      <p><a class="btn" href="/">戻る</a></p>
+    <!-- エラー表示（create失敗時などで使いたければ） -->
+    <% if (typeof errors !== 'undefined' && errors && errors.length) { %>
+      <section class="alert">
+        <ul>
+          <% errors.forEach(e => { %>
+            <li><%= e %></li>
+          <% }) %>
+        </ul>
+      </section>
     <% } %>
+
+    <!-- グラフ -->
+    <section class="card">
+      <h2>収支グラフ</h2>
+      <canvas id="balanceChart" height="120"></canvas>
+    </section>
+
+    <!-- 新規登録フォーム -->
+    <section class="card">
+      <h2>収支を追加</h2>
+      <form action="/create" method="POST" class="stack">
+        <div class="field">
+          <span class="field-label">項目名</span>
+          <input type="text" name="title" required />
+        </div>
+
+        <div class="field">
+          <span class="field-label">金額</span>
+          <input type="number" name="amount" required />
+        </div>
+
+        <div class="field">
+          <span class="field-label">収支区分</span>
+          <div class="kind-toggle">
+            <input
+              type="radio"
+              id="kind-income"
+              name="kind"
+              value="INCOME"
+              checked
+            />
+            <label for="kind-income">収入</label>
+
+            <input
+              type="radio"
+              id="kind-expense"
+              name="kind"
+              value="EXPENSE"
+            />
+            <label for="kind-expense">支出</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="field-label">日付</span>
+          <input type="date" name="date" value="<%= new Date().toISOString().slice(0,10) %>" required />
+        </div>
+
+        <div class="field">
+          <span class="field-label">メモ</span>
+          <textarea name="memo" rows="3"></textarea>
+        </div>
+
+        <button type="submit" class="btn primary align-right">追加</button>
+      </form>
+    </section>
+
+    <!-- 一覧 -->
+    <section class="card">
+      <h2>収支一覧</h2>
+
+      <% if (!records || !records.length) { %>
+        <p class="empty">登録されている収支はありません。</p>
+      <% } else { %>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>日付</th>
+              <th>項目名</th>
+              <th>区分</th>
+              <th class="numeric">金額</th>
+              <th>詳細</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% records.forEach(r => { %>
+              <tr>
+                <td><%= r.date.toISOString().slice(0,10) %></td>
+                <td><%= r.title %></td>
+                <td><%= r.kind === 'INCOME' ? '収入' : '支出' %></td>
+                <td class="numeric"><%= r.amount.toLocaleString() %> 円</td>
+                <td><a class="btn subtle" href="/detail?id=<%= r.id %>">表示</a></td>
+                <td><a class="btn danger" href="/delete?id=<%= r.id %>">削除</a></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      <% } %>
+    </section>
   </main>
+
+  <!-- グラフ初期化 -->
+  <script>
+    (function () {
+      // サーバーから渡された chartData を安全に JS オブジェクトにする
+      const raw = JSON.parse('<%- JSON.stringify(chartData || {}) %>');
+
+      // デバッグ用：開発中だけ中身を確認（問題なければコメントアウトしてOK）
+      console.log('chartData:', raw);
+
+      // データがないときは描画しない
+      if (!raw || !raw.labels || raw.labels.length === 0) {
+        return;
+      }
+
+      const canvas = document.getElementById('balanceChart');
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+
+      const data = {
+        labels: raw.labels,
+        datasets: [
+          {
+            label: '累積収入',
+            data: raw.income,
+            borderWidth: 2,
+            tension: 0
+          },
+          {
+            label: '累積支出',
+            data: raw.expense,
+            borderWidth: 2,
+            tension: 0
+          },
+          {
+            label: '利益（累積）',
+            data: raw.profit,
+            borderWidth: 2,
+            tension: 0,
+            borderDash: [6, 4]
+          }
+        ]
+      };
+
+      new Chart(ctx, {
+        type: 'line',
+        data,
+        options: {
+          responsive: true,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { position: 'bottom' }
+          },
+          scales: {
+            y: {
+              ticks: {
+                callback: function (value) {
+                  return value.toLocaleString() + '円';
+                }
+              }
+            }
+          }
+        }
+      });
+    })();
+  </script>
 </body>
 </html>

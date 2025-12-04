@@ -1,45 +1,45 @@
-// router/update.js
 const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const { ensureLoggedIn } = require('../middlewares/auth');
 
-function ymd(date) {
-  const d = new Date(date);
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${d.getFullYear()}-${m}-${day}`;
-}
+// 編集フォームの表示
+router.get('/', ensureLoggedIn, async (req, res, next) => {
+  const id = Number(req.query.id);
+  const userId = req.session.userId;
 
-router.get('/:id', async (req, res, next) => {
   try {
-    const id = Number(req.params.id);
-    const blog = await prisma.blog.findUnique({ where: { id } });
-    if (!blog) return res.status(404).send('Not Found');
-    res.render('update', { blog: { ...blog, dateStr: ymd(blog.postedAt) }, errors: [] });
-  } catch (e) { next(e); }
+    const record = await prisma.transaction.findFirst({
+      where: { id, userId }
+    });
+
+    if (!record) return res.status(404).send('Not Found');
+
+    res.render('edit', { record });
+  } catch (e) {
+    next(e);
+  }
 });
 
-router.post('/:id', async (req, res, next) => {
-  const id = Number(req.params.id);
-  const { title, postedAt, content } = req.body;
-  const errors = [];
-  if (!title || !title.trim()) errors.push('タイトルは必須です。');
-  if (!content || !content.trim()) errors.push('内容は必須です。');
-  if (!postedAt || !/^\d{4}-\d{2}-\d{2}$/.test(postedAt)) errors.push('投稿日が不正です。');
-
-  if (errors.length) {
-    return res.status(400).render('update', {
-      blog: { id, title, content, dateStr: postedAt || '' },
-      errors
-    });
-  }
+// 編集内容の反映
+router.post('/', ensureLoggedIn, async (req, res, next) => {
+  const id = Number(req.query.id);
+  const userId = req.session.userId;
+  const { title, amount, kind, date, memo } = req.body;
 
   try {
-    await prisma.blog.update({
-      where: { id },
-      data: { title: title.trim(), content: content.trim(), postedAt: new Date(postedAt) }
+    await prisma.transaction.updateMany({
+      where: { id, userId },
+      data: {
+        title,
+        amount: Number(amount),
+        kind,
+        date: new Date(date),
+        memo: memo || null
+      }
     });
+
     res.redirect('/');
   } catch (e) { next(e); }
 });

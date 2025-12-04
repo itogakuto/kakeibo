@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>収支編集</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+
+<body>
+  <header class="app-header">
+    <div class="container header-inner">
+      <h1>収支を編集</h1>
+    </div>
+  </header>
+
+  <main class="container main-layout">
+    <section class="card">
+      <form action="/update?id=<%= record.id %>" method="POST" class="stack">
+
+        <div class="field">
+          <span class="field-label">項目名</span>
+          <input type="text" name="title" value="<%= record.title %>" required />
+        </div>
+
+        <div class="field">
+          <span class="field-label">金額</span>
+          <input type="number" name="amount" value="<%= record.amount %>" required />
+        </div>
+
+        <div class="field">
+          <span class="field-label">収支区分</span>
+          <div class="kind-toggle">
+            <input
+              type="radio"
+              id="kind-income"
+              name="kind"
+              value="INCOME"
+              <%= record.kind === 'INCOME' ? 'checked' : '' %>
+            />
+            <label for="kind-income">収入</label>
+
+            <input
+              type="radio"
+              id="kind-expense"
+              name="kind"
+              value="EXPENSE"
+              <%= record.kind === 'EXPENSE' ? 'checked' : '' %>
+            />
+            <label for="kind-expense">支出</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="field-label">日付</span>
+          <input
+            type="date"
+            name="date"
+            value="<%= record.date.toISOString().slice(0,10) %>"
+            required
+          />
+        </div>
+
+        <div class="field">
+          <span class="field-label">メモ</span>
+          <textarea name="memo" rows="3"><%= record.memo || '' %></textarea>
+        </div>
+
+        <button type="submit" class="btn primary align-right">
+          更新する
+        </button>
+
+      </form>
+    </section>
+  </main>
+</body>
+</html>

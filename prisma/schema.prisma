@@ -7,12 +7,46 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Blog {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String
-  postedAt  DateTime @default(now())
+// ユーザー情報
+model User {
+  id           Int           @id @default(autoincrement())
+  email        String        @unique
+  passwordHash String        // ハッシュ化済みパスワードを保存
+  transactions Transaction[] // 1ユーザー：多トランザクション
 
-  @@index([title])
-  @@index([content])
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+// お金の動き（収支）
+model Transaction {
+  id        Int              @id @default(autoincrement())
+  
+  // 所有ユーザー
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+
+  // 必須：金額 + 収支区分
+  amount    Int              // 金額（円）
+  kind      TransactionKind  // INCOME or EXPENSE
+
+  // 表示用の項目名・日付
+  title     String           // 項目名
+  date      DateTime         // 日付
+
+  // 詳細表示用のメモ
+  memo      String?          // 任意
+
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  // よく使いそうな条件で index を貼っておく
+  @@index([userId, date])
+  @@index([userId, kind])
+}
+
+// 収支区分（enum）
+enum TransactionKind {
+  INCOME   // 収入
+  EXPENSE  // 支出
 }

@@ -4,6 +4,8 @@ var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 
+const session = require('express-session');
+
 var indexRouter = require("./routes/index");
 var createRouter = require("./routes/create");
 var updateRouter = require("./routes/update");
@@ -20,6 +22,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
+
+app.use(
+  session({
+    secret: 'webprog',   // 好きな文字列
+    resave: false,
+    saveUninitialized: false,
+  })
+);
 
 app.use("/", indexRouter);
 app.use("/create", createRouter);

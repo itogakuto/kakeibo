@@ -1,46 +1,61 @@
-// router/create.js
+// routes/create.js
 const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const { ensureLoggedIn } = require('../middlewares/auth');
 
-function ymd(date) {
-  const d = new Date(date);
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${d.getFullYear()}-${m}-${day}`;
-}
+// 収支の新規作成
+router.post('/', ensureLoggedIn, async (req, res, next) => {
+  const userId = req.session.userId;
+  const { title, amount, kind, date, memo } = req.body;
 
-router.post('/', async (req, res, next) => {
-  const { title, postedAt, content } = req.body;
   const errors = [];
-  if (!title || !title.trim()) errors.push('タイトルは必須です。');
-  if (!content || !content.trim()) errors.push('内容は必須です。');
-  if (!postedAt || !/^\d{4}-\d{2}-\d{2}$/.test(postedAt)) errors.push('投稿日が不正です。');
+
+  // 金額チェック（数値＆ 0 以上）
+  const amountNum = Number(amount);
+  if (!amount || Number.isNaN(amountNum)) {
+    errors.push('金額は数値で入力してください');
+  } else if (amountNum <= 0) {
+    errors.push('金額は 1 以上を入力してください');
+  }
+
+  // 収支区分チェック
+  const validKinds = ['INCOME', 'EXPENSE'];
+  if (!kind || !validKinds.includes(kind)) {
+    errors.push('収支区分が不正です');
+  }
+
+  // 日付チェック（あれば Date に変換できるか）
+  let dateObj = new Date();
+  if (date) {
+    const d = new Date(date);
+    if (Number.isNaN(d.getTime())) {
+      errors.push('日付の形式が不正です');
+    } else {
+      dateObj = d;
+    }
+  }
 
   if (errors.length) {
-    try {
-      const posts = await prisma.blog.findMany({ orderBy: { postedAt: 'desc' } });
-      const viewPosts = posts.map(p => ({ ...p, dateStr: ymd(p.postedAt) }));
-      return res.status(400).render('index', {
-        title: 'My Blog',
-        posts: viewPosts,
-        errors,
-        form: { title, postedAt: postedAt || ymd(new Date()), content },
-        searchMode: false,
-        keyword: ''
-      });
-    } catch (e) { return next(e); }
+    // 今はひとまず 400 とテキスト返し
+    // 将来的には index.ejs を再表示して errors / 入力値を埋め戻すとUXが良くなる
+    return res.status(400).send(errors.join('\n'));
   }
 
   try {
-    await prisma.blog.create({
+    await prisma.transaction.create({
       data: {
-        title: title.trim(),
-        content: content.trim(),
-        postedAt: new Date(postedAt) // YYYY-MM-DD を Date に
-      }
+        userId,
+        title: title ? title.trim() : '',
+        amount: amountNum,
+        kind,
+        date: dateObj,
+        memo: memo && memo.trim() ? memo.trim() : null,
+      },
     });
+
+    // 作成後はダッシュボードへ
     res.redirect('/');
   } catch (e) {
     next(e);

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>収支詳細 - ゆうちょ家計簿</title>
+  <link rel="stylesheet" href="/style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+<body>
+  <main class="container">
+    <header>
+      <h1>収支の詳細</h1>
+    </header>
+
+    <section class="card">
+      <dl class="detail-list">
+        <div class="detail-row">
+          <dt>日付</dt>
+          <dd><%= record.date.toISOString().slice(0,10) %></dd>
+        </div>
+
+        <div class="detail-row">
+          <dt>項目名</dt>
+          <dd><%= record.title %></dd>
+        </div>
+
+        <div class="detail-row">
+          <dt>収支区分</dt>
+          <dd><%= record.kind === 'INCOME' ? '収入' : '支出' %></dd>
+        </div>
+
+        <div class="detail-row">
+          <dt>金額</dt>
+          <dd><%= record.amount.toLocaleString() %> 円</dd>
+        </div>
+
+        <div class="detail-row">
+          <dt>メモ</dt>
+          <dd>
+            <% if (record.memo) { %>
+              <pre><%= record.memo %></pre>
+            <% } else { %>
+              <span style="color:#9ca3af;">（メモはありません）</span>
+            <% } %>
+          </dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="card">
+      <h2>操作</h2>
+      <div class="actions">
+        <a class="btn primary" href="/update?id=<%= record.id %>">編集する</a>
+        <a class="btn danger" href="/delete?id=<%= record.id %>">削除する</a>
+        <a class="btn subtle" href="/">一覧に戻る</a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

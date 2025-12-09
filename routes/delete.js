@@ -1,3 +1,4 @@
+// routes/delete.js
 const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
@@ -8,8 +9,14 @@ router.get('/', ensureLoggedIn, async (req, res, next) => {
   const id = Number(req.query.id);
   const userId = req.session.userId;
 
+  if (!Number.isInteger(id)) {
+    return res.status(400).render('error', {
+      message: '不正なIDが指定されました。',
+      error: null
+    });
+  }
+
   try {
-    // userId を where に入れることで「本人のデータだけ削除」になる
     await prisma.transaction.deleteMany({
       where: { id, userId }
     });

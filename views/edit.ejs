@@ -15,6 +15,15 @@
   </header>
 
   <main class="container main-layout">
+    <% if (typeof errors !== 'undefined' && errors && errors.length) { %>
+      <section class="alert">
+        <ul>
+          <% errors.forEach(e => { %>
+            <li><%= e %></li>
+          <% }) %>
+        </ul>
+      </section>
+    <% } %>
     <section class="card">
       <form action="/update?id=<%= record.id %>" method="POST" class="stack">
 

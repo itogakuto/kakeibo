@@ -4,29 +4,40 @@
 <head>
   <meta charset="UTF-8" />
   <title>新規登録 - 家計簿アプリ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="/style.css" />
 </head>
-<body>
-  <main class="container">
-    <h1>ゆうちょ家計簿 新規登録</h1>
+<body class="auth-page">
+  <main class="auth-main">
+    <div class="auth-card card">
+      <div class="auth-logo">家計簿アプリ</div>
+      <h1 class="auth-title">新規登録</h1>
 
-    <% if (error) { %>
-      <div class="alert">
-        <ul><li><%= error %></li></ul>
-      </div>
-    <% } %>
+      <% if (error) { %>
+        <div class="alert">
+          <ul><li><%= error %></li></ul>
+        </div>
+      <% } %>
 
-    <form action="/register" method="POST" class="card stack">
-      <label>メールアドレス:
-        <input type="email" name="email" required />
-      </label>
-      <label>パスワード:
-        <input type="password" name="password" required />
-      </label>
-      <button type="submit">登録する</button>
-    </form>
+      <form action="/register" method="POST" class="stack">
+        <div class="field">
+          <span class="field-label">メールアドレス</span>
+          <input type="email" name="email" required />
+        </div>
 
-    <p>すでにアカウントをお持ちの方は <a class="btn" href="/login">ログイン</a></p>
+        <div class="field">
+          <span class="field-label">パスワード</span>
+          <input type="password" name="password" required />
+        </div>
+
+        <button type="submit" class="btn primary align-right">登録する</button>
+      </form>
+
+      <p class="auth-sub">
+        すでにアカウントをお持ちの方は
+        <a href="/login" class="link-primary">ログイン</a>
+      </p>
+    </div>
   </main>
 </body>
 </html>

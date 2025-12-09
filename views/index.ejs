@@ -33,7 +33,7 @@
       </div>
       <div class="card summary-card">
         <h2>残高</h2>
-        <p class="summary-value">
+        <p class="summary-value <%= (summary && summary.balance < 0) ? 'negative' : '' %>">
           <%= ((summary && summary.balance) || 0).toLocaleString() %><span>円</span>
         </p>
       </div>
@@ -69,7 +69,7 @@
       </form>
     </section>
 
-    <!-- エラー表示（create失敗時などで使いたければ） -->
+    <!-- エラー表示（create失敗時など） -->
     <% if (typeof errors !== 'undefined' && errors && errors.length) { %>
       <section class="alert">
         <ul>
@@ -136,37 +136,41 @@
       </form>
     </section>
 
-    <!-- 一覧 -->
+    <!-- 収支一覧 -->
     <section class="card">
       <h2>収支一覧</h2>
 
       <% if (!records || !records.length) { %>
         <p class="empty">登録されている収支はありません。</p>
       <% } else { %>
-        <table class="table">
-          <thead>
-            <tr>
-              <th>日付</th>
-              <th>項目名</th>
-              <th>区分</th>
-              <th class="numeric">金額</th>
-              <th>詳細</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% records.forEach(r => { %>
+        <div class="table-wrapper">
+          <table class="table">
+            <thead>
               <tr>
-                <td><%= r.date.toISOString().slice(0,10) %></td>
-                <td><%= r.title %></td>
-                <td><%= r.kind === 'INCOME' ? '収入' : '支出' %></td>
-                <td class="numeric"><%= r.amount.toLocaleString() %> 円</td>
-                <td><a class="btn subtle" href="/detail?id=<%= r.id %>">表示</a></td>
-                <td><a class="btn danger" href="/delete?id=<%= r.id %>">削除</a></td>
+                <th>日付</th>
+                <th>項目名</th>
+                <th>区分</th>
+                <th class="numeric">金額</th>
+                <th></th>
               </tr>
-            <% }) %>
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              <% records.forEach(r => { %>
+                <tr>
+                  <td><%= r.date.toISOString().slice(0,10) %></td>
+                  <td><%= r.title %></td>
+                  <td class="kind-cell <%= r.kind === 'INCOME' ? 'kind-income' : 'kind-expense' %>">
+                    <%= r.kind === 'INCOME' ? '収入' : '支出' %>
+                  </td>
+                  <td class="numeric"><%= r.amount.toLocaleString() %> 円</td>
+                  <td>
+                    <a class="btn subtle" href="/detail?id=<%= r.id %>">表示</a>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
       <% } %>
     </section>
   </main>

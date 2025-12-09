@@ -373,3 +373,63 @@ button.primary:hover {
 .link-primary:hover {
   text-decoration: underline;
 }
+/* 収支区分の色分け */
+.kind-cell.kind-income {
+  color: #16a34a; /* 緑 */
+  font-weight: 600;
+}
+
+.kind-cell.kind-expense {
+  color: #dc2626; /* 赤 */
+  font-weight: 600;
+}
+
+/* 残高がマイナスの時だけ赤く */
+.summary-value.negative {
+  color: #dc2626;
+}
+
+/* テーブルの横スクロール（スマホ向け） */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* auth-page 共通レイアウト（ざっくり） */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+}
+
+.auth-main {
+  width: 100%;
+  max-width: 420px;
+  padding: 16px;
+}
+
+.auth-card {
+  padding: 24px;
+}
+
+.auth-logo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.auth-title {
+  font-size: 1.5rem;
+  margin-bottom: 16px;
+}
+
+.auth-sub {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.link-primary {
+  color: #2563eb;
+}
